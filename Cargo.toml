@@ -1,0 +1,21 @@
+[package]
+name = "vibecoded_game"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.14", default-features = false, features = [
+    "animation",
+    "bevy_asset",
+    "bevy_core_pipeline",
+    "bevy_gilrs",
+    "bevy_render",
+    "bevy_scene",
+    "bevy_sprite",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_winit",
+    "png",
+    "x11",
+    "wayland"
+] }

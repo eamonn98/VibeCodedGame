@@ -1,8 +1,11 @@
 use bevy::prelude::*;
 
 mod collisions;
+mod combat;
 mod movement;
 mod physics;
+
+pub use movement::{MovementState, MovementSystemSet};
 
 pub struct SystemsPlugin;
 
@@ -12,6 +15,7 @@ impl Plugin for SystemsPlugin {
             movement::MovementPlugin,
             physics::PhysicsPlugin,
             collisions::CollisionPlugin,
+            combat::CombatPlugin,
         ));
     }
 }

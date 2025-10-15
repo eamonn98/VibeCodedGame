@@ -13,8 +13,10 @@ impl Plugin for InputPlugin {
 #[derive(Resource, Default)]
 pub struct InputState {
     pub movement: Vec2,
-    pub dash: bool,
+    pub dash_pressed: bool,
+    pub dash_just_pressed: bool,
     pub attack: bool,
+    pub toggle_camera: bool,
 }
 
 fn map_inputs(mut input_state: ResMut<InputState>, keyboard: Res<ButtonInput<KeyCode>>) {
@@ -32,7 +34,12 @@ fn map_inputs(mut input_state: ResMut<InputState>, keyboard: Res<ButtonInput<Key
         movement.x += 1.0;
     }
 
+    let dash_pressed = keyboard.pressed(KeyCode::Space);
+    let dash_just_pressed = keyboard.just_pressed(KeyCode::Space);
+
     input_state.movement = movement.normalize_or_zero();
-    input_state.dash = keyboard.just_pressed(KeyCode::Space);
+    input_state.dash_pressed = dash_pressed;
+    input_state.dash_just_pressed = dash_just_pressed;
     input_state.attack = keyboard.just_pressed(KeyCode::KeyJ);
+    input_state.toggle_camera = keyboard.just_pressed(KeyCode::KeyC);
 }

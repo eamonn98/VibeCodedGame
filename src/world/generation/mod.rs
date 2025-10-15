@@ -3,10 +3,12 @@ use bevy::prelude::*;
 mod biome;
 mod layout;
 mod noise;
+mod terrain;
 
 pub use biome::BiomeRegistry;
 pub use layout::ChunkDimensions;
 pub use noise::NoiseSettings;
+pub use terrain::TerrainSettings;
 
 #[derive(Resource, Default)]
 pub struct WorldSeed(pub u64);
@@ -19,5 +21,6 @@ impl Plugin for GenerationPlugin {
         biome::register(app);
         layout::register(app);
         noise::register(app);
+        app.add_plugins(terrain::TerrainPlugin);
     }
 }

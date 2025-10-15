@@ -32,6 +32,15 @@ timeline
 ## Key Deliverables
 By the end of the cycle, the repository should expose a modular Bevy project with the rendering pipeline, world-generation module, and gameplay prototype all compiled together. The procedural world library must expose tunable parameters so designers can shape biome behavior. The HD-2D shader suite needs demonstrable assets that showcase lighting and depth. Documentation ties it all together with setup steps, architectural overviews, and suggestions for subsequent roadmap items.
 
+## Definition of Done
+The MVP is considered complete when the following criteria are satisfied:
+
+1. Core loops — movement, dash, and a basic melee strike — operate reliably against chunk-generated terrain, with collisions preventing traversal through blocking tiles.
+2. Chunk streaming maintains a stable view radius around the player, reusing or unloading chunks without frame hitching, and exposes live metrics via the debug overlay.
+3. Rendering delivers the targeted HD-2D presentation: layered sprites, baseline lighting/shading pass, and responsive camera follow with shake feedback.
+4. Tooling and automation — including `cargo fmt`, `cargo clippy`, unit tests, and GitHub Actions workflows — pass on all supported platforms, producing distributable builds.
+5. Documentation set (setup guide, architecture overview, MVP tasks) is up to date, and a Definition of Done checklist is reviewed before release.
+
 ## Risks Worth Watching
 **Visual complexity** can quickly consume time if the lighting pass underperforms; the mitigation is to start with minimal effects, profile frequently, and iterate shaders only after the baseline runs smoothly. **Procedural generation scope creep** threatens to extend the schedule, so the MVP defaults to two or three biome archetypes with room to expand later. **Cross-platform builds** often bite late in the project, hence early automation with tools like `cross` and clearly documented Windows setup. Finally, **asset creation** for HD-2D is non-trivial: placeholder sprites with normal maps will keep velocity up while the art pipeline matures.
 

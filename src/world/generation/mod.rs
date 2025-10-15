@@ -5,8 +5,6 @@ mod layout;
 mod noise;
 mod terrain;
 
-pub use biome::BiomeRegistry;
-pub use layout::ChunkDimensions;
 pub use noise::NoiseSettings;
 pub use terrain::TerrainSettings;
 

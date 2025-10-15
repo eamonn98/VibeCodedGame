@@ -1,12 +1,13 @@
 use bevy::prelude::*;
 
 mod chunk;
+pub mod debug;
 pub mod generation;
 mod tiles;
 
-pub use chunk::{ChunkCoord, ChunkLayer, ChunkManifest, ChunkPlugin, ChunkSettings, ChunkTiles, WorldChunks};
+pub use chunk::{ChunkSettings, WorldChunks};
 pub use generation::TerrainSettings;
-pub use tiles::{TileDefinition, TileId, TileRegistry, TilesPlugin};
+pub use tiles::TileRegistry;
 
 pub struct WorldPlugin;
 

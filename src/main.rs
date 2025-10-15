@@ -1,6 +1,7 @@
 mod app;
 mod config;
 mod core;
+mod enemy;
 mod player;
 mod rendering;
 mod systems;

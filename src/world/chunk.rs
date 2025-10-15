@@ -10,10 +10,12 @@ pub struct WorldChunks {
 }
 
 impl WorldChunks {
+    #[allow(dead_code)]
     pub fn ensure_chunk(&mut self, coord: ChunkCoord) -> &mut ChunkTiles {
         self.loaded.entry(coord).or_insert_with(ChunkTiles::new)
     }
 
+    #[allow(dead_code)]
     pub fn remove_chunk(&mut self, coord: &ChunkCoord) {
         self.loaded.remove(coord);
     }
@@ -56,6 +58,7 @@ pub struct ChunkManifest {
 }
 
 impl ChunkManifest {
+    #[allow(dead_code)]
     pub fn register_layer(&mut self, name: impl Into<String>, z_index: f32) -> ChunkLayer {
         let layer = ChunkLayer(self.layers.len() as u8);
         self.layers.push(ChunkLayerEntry {
@@ -66,6 +69,7 @@ impl ChunkManifest {
         layer
     }
 
+    #[allow(dead_code)]
     pub fn layer_by_name(&self, name: &str) -> Option<ChunkLayer> {
         self.layers
             .iter()
@@ -73,6 +77,7 @@ impl ChunkManifest {
             .map(|entry| entry.layer)
     }
 
+    #[allow(dead_code)]
     pub fn entries(&self) -> impl Iterator<Item = &ChunkLayerEntry> {
         self.layers.iter()
     }
@@ -132,6 +137,7 @@ impl ChunkTiles {
         }
     }
 
+    #[allow(dead_code)]
     pub fn ensure_layer(&mut self, layer: ChunkLayer, size: UVec2) -> &mut LayerData {
         let entry = self
             .layers
@@ -149,6 +155,7 @@ impl ChunkTiles {
         self.dirty = false;
     }
 
+    #[allow(dead_code)]
     pub fn mark_dirty(&mut self) {
         self.dirty = true;
     }
@@ -164,6 +171,7 @@ pub struct ChunkSettings {
 }
 
 impl Default for ChunkSettings {
+    #[allow(dead_code)]
     fn default() -> Self {
         Self {
             tile_size: Vec2::splat(48.0),
@@ -173,6 +181,7 @@ impl Default for ChunkSettings {
 }
 
 impl ChunkSettings {
+    #[allow(dead_code)]
     pub fn chunk_pixel_size(&self) -> Vec2 {
         Vec2::new(
             self.chunk_dimensions.x as f32 * self.tile_size.x,

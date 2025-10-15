@@ -4,6 +4,7 @@ use bevy::window::WindowPlugin;
 
 use crate::config;
 use crate::core;
+use crate::enemy;
 use crate::player;
 use crate::rendering;
 use crate::systems;
@@ -40,6 +41,7 @@ impl Plugin for GamePlugin {
             core::CorePlugin,
             rendering::RenderingPlugin,
             world::WorldPlugin,
+            enemy::EnemyPlugin,
             player::PlayerPlugin,
             systems::SystemsPlugin,
             ui::UiPlugin,

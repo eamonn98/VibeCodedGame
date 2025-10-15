@@ -17,6 +17,7 @@ pub struct InputState {
     pub dash_just_pressed: bool,
     pub attack: bool,
     pub toggle_camera: bool,
+    pub toggle_debug_tiles: bool,
 }
 
 fn map_inputs(mut input_state: ResMut<InputState>, keyboard: Res<ButtonInput<KeyCode>>) {
@@ -42,4 +43,5 @@ fn map_inputs(mut input_state: ResMut<InputState>, keyboard: Res<ButtonInput<Key
     input_state.dash_just_pressed = dash_just_pressed;
     input_state.attack = keyboard.just_pressed(KeyCode::KeyJ);
     input_state.toggle_camera = keyboard.just_pressed(KeyCode::KeyC);
+    input_state.toggle_debug_tiles = keyboard.just_pressed(KeyCode::KeyV);
 }

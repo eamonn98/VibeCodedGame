@@ -15,8 +15,14 @@ impl Plugin for MovementPlugin {
     fn build(&self, app: &mut App) {
         app.configure_sets(Update, MovementSystemSet::Update)
             .init_resource::<MovementSettings>()
-            .add_systems(Update, attach_movement_state.in_set(MovementSystemSet::Update))
-            .add_systems(Update, update_dash_and_velocity.in_set(MovementSystemSet::Update));
+            .add_systems(
+                Update,
+                attach_movement_state.in_set(MovementSystemSet::Update),
+            )
+            .add_systems(
+                Update,
+                update_dash_and_velocity.in_set(MovementSystemSet::Update),
+            );
     }
 }
 
@@ -47,6 +53,7 @@ pub struct MovementState {
     pub dash_remaining: f32,
     pub cooldown_remaining: f32,
     pub desired_translation: Vec2,
+    pub blocked: bool,
 }
 
 fn attach_movement_state(
@@ -70,6 +77,7 @@ fn update_dash_and_velocity(
 
     let mut dash_triggered = false;
     for mut state in &mut player_query {
+        state.blocked = false;
         if state.dash_remaining > 0.0 {
             state.dash_remaining = (state.dash_remaining - dt).max(0.0);
         }

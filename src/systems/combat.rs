@@ -11,8 +11,10 @@ impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<AttackEvent>()
             .add_event::<EnemyHitEvent>()
+            .add_event::<EnemyDeathEvent>()
             .init_resource::<AttackSettings>()
             .init_resource::<AttackState>()
+            .init_resource::<ComboTracker>()
             .add_systems(
                 Update,
                 (
@@ -21,7 +23,11 @@ impl Plugin for CombatPlugin {
                     spawn_attack_hitboxes,
                     detect_attack_collisions,
                     update_enemy_hit_flash,
+                    spawn_hit_sparks,
+                    update_hit_sparks,
                     apply_attack_feedback,
+                    accumulate_combo_hits,
+                    reset_combo_on_death,
                     expire_attack_hitboxes,
                 ),
             );
@@ -76,6 +82,29 @@ struct AttackHitbox {
 #[derive(Component)]
 struct EnemyHitFlash {
     timer: f32,
+}
+
+#[derive(Component)]
+struct HitSpark {
+    lifetime: f32,
+    initial_lifetime: f32,
+}
+
+#[derive(Event, Clone, Copy)]
+pub struct EnemyHitEvent {
+    pub enemy: Entity,
+}
+
+#[derive(Event, Clone, Copy)]
+pub struct EnemyDeathEvent {
+    pub enemy: Entity,
+}
+
+#[derive(Resource, Default)]
+pub struct ComboTracker {
+    current: u32,
+    decay_timer: f32,
+    last_defeated: Option<Entity>,
 }
 
 fn queue_attack_inputs(
@@ -207,16 +236,11 @@ fn spawn_attack_hitboxes(
     }
 }
 
-#[derive(Event, Clone, Copy)]
-pub struct EnemyHitEvent {
-    pub enemy: Entity,
-}
-
 fn detect_attack_collisions(
     mut commands: Commands,
     mut hitboxes: Query<(&Transform, &mut AttackHitbox)>,
     enemies: Query<(Entity, &Transform), With<EnemyEntity>>,
-    mut events: EventWriter<EnemyHitEvent>,
+    mut hit_events: EventWriter<EnemyHitEvent>,
 ) {
     for (hitbox_transform, mut hitbox) in &mut hitboxes {
         let hitbox_center = hitbox_transform.translation.truncate();
@@ -235,7 +259,7 @@ fn detect_attack_collisions(
                 commands
                     .entity(enemy_entity)
                     .insert(EnemyHitFlash { timer: 0.18 });
-                events.send(EnemyHitEvent {
+                hit_events.send(EnemyHitEvent {
                     enemy: enemy_entity,
                 });
             }
@@ -263,6 +287,56 @@ fn update_enemy_hit_flash(
     }
 }
 
+fn spawn_hit_sparks(
+    mut commands: Commands,
+    mut reader: EventReader<EnemyHitEvent>,
+    query: Query<&Transform, With<EnemyEntity>>,
+) {
+    for event in reader.read() {
+        if let Ok(transform) = query.get(event.enemy) {
+            commands.spawn((
+                SpriteBundle {
+                    sprite: Sprite {
+                        color: Color::srgba(1.0, 0.8, 0.3, 0.9),
+                        custom_size: Some(Vec2::splat(20.0)),
+                        ..Default::default()
+                    },
+                    transform: Transform::from_translation(
+                        transform.translation + Vec3::new(0.0, 24.0, 1.5),
+                    ),
+                    ..Default::default()
+                },
+                HitSpark {
+                    lifetime: 0.18,
+                    initial_lifetime: 0.18,
+                },
+                Name::new("Hit Spark"),
+            ));
+        }
+    }
+}
+
+fn update_hit_sparks(
+    mut commands: Commands,
+    time: Res<Time>,
+    time_scale: Res<TimeScale>,
+    mut query: Query<(Entity, &mut Transform, &mut Sprite, &mut HitSpark)>,
+) {
+    let dt = time.delta_seconds() * time_scale.0;
+
+    for (entity, mut transform, mut sprite, mut spark) in &mut query {
+        spark.lifetime -= dt;
+        transform.scale *= Vec3::splat(1.0 + dt * 4.0);
+
+        let t = (spark.lifetime / spark.initial_lifetime).clamp(0.0, 1.0);
+        sprite.color = sprite.color.with_alpha(t);
+
+        if spark.lifetime <= 0.0 {
+            commands.entity(entity).despawn_recursive();
+        }
+    }
+}
+
 fn apply_attack_feedback(
     mut reader: EventReader<EnemyHitEvent>,
     mut camera_state: ResMut<CameraState>,
@@ -274,6 +348,48 @@ fn apply_attack_feedback(
 
     if any {
         camera_state.desired_shake = camera_state.desired_shake.max(Vec2::splat(4.0));
+    }
+}
+
+fn accumulate_combo_hits(
+    time: Res<Time>,
+    time_scale: Res<TimeScale>,
+    mut tracker: ResMut<ComboTracker>,
+    mut reader: EventReader<EnemyHitEvent>,
+) {
+    let dt = time.delta_seconds() * time_scale.0;
+    tracker.decay_timer = (tracker.decay_timer - dt).max(0.0);
+
+    let mut hit_registered = false;
+    for _ in reader.read() {
+        hit_registered = true;
+    }
+
+    if hit_registered {
+        if tracker.decay_timer <= 0.0 {
+            tracker.current = 0;
+        }
+
+        tracker.current = tracker.current.saturating_add(1);
+        tracker.decay_timer = 1.5;
+    } else if tracker.decay_timer <= 0.0 && tracker.current > 0 {
+        tracker.current = 0;
+    }
+}
+
+fn reset_combo_on_death(
+    mut tracker: ResMut<ComboTracker>,
+    mut death_reader: EventReader<EnemyDeathEvent>,
+) {
+    let mut reset = false;
+    for event in death_reader.read() {
+        tracker.last_defeated = Some(event.enemy);
+        reset = true;
+    }
+
+    if reset && tracker.current > 0 {
+        tracker.current = 0;
+        tracker.decay_timer = 0.0;
     }
 }
 

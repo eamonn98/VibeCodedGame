@@ -7,6 +7,7 @@ edition = "2021"
 bevy = { version = "0.14", default-features = false, features = [
     "animation",
     "bevy_asset",
+    "bevy_audio",
     "bevy_core_pipeline",
     "bevy_gilrs",
     "bevy_render",
@@ -14,6 +15,7 @@ bevy = { version = "0.14", default-features = false, features = [
     "bevy_sprite",
     "bevy_text",
     "bevy_ui",
+    "vorbis",
     "bevy_winit",
     "png",
     "x11",

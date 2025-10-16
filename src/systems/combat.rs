@@ -1,3 +1,4 @@
+use bevy::audio::{AudioBundle, AudioSource, PlaybackSettings};
 use bevy::prelude::*;
 
 use crate::core::{CameraState, InputState, TimeScale};
@@ -9,28 +10,45 @@ pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
-        app.add_event::<AttackEvent>()
-            .add_event::<EnemyHitEvent>()
-            .add_event::<EnemyDeathEvent>()
-            .init_resource::<AttackSettings>()
-            .init_resource::<AttackState>()
-            .init_resource::<ComboTracker>()
-            .add_systems(
-                Update,
-                (
-                    queue_attack_inputs,
-                    resolve_attack_state,
-                    spawn_attack_hitboxes,
-                    detect_attack_collisions,
-                    update_enemy_hit_flash,
-                    spawn_hit_sparks,
-                    update_hit_sparks,
-                    apply_attack_feedback,
-                    accumulate_combo_hits,
-                    reset_combo_on_death,
-                    expire_attack_hitboxes,
-                ),
-            );
+        let hit_sfx = {
+            let asset_server = app.world().resource::<AssetServer>();
+            [
+                "audio/switch17.ogg",
+                "audio/switch23.ogg",
+                "audio/switch36.ogg",
+                "audio/click4.ogg",
+            ]
+            .iter()
+            .map(|path| asset_server.load(*path))
+            .collect::<Vec<_>>()
+        };
+
+        app.insert_resource(CombatAudio {
+            hits: hit_sfx,
+            next_index: 0,
+        })
+        .add_event::<AttackEvent>()
+        .add_event::<EnemyHitEvent>()
+        .add_event::<EnemyDeathEvent>()
+        .init_resource::<AttackSettings>()
+        .init_resource::<AttackState>()
+        .init_resource::<ComboTracker>()
+        .add_systems(
+            Update,
+            (
+                queue_attack_inputs,
+                resolve_attack_state,
+                spawn_attack_hitboxes,
+                detect_attack_collisions,
+                update_enemy_hit_flash,
+                spawn_hit_sparks,
+                update_hit_sparks,
+                apply_attack_feedback,
+                accumulate_combo_hits,
+                reset_combo_on_death,
+                expire_attack_hitboxes,
+            ),
+        );
     }
 }
 
@@ -95,16 +113,52 @@ pub struct EnemyHitEvent {
     pub enemy: Entity,
 }
 
-#[derive(Event, Clone, Copy)]
+#[derive(Event, Clone)]
 pub struct EnemyDeathEvent {
     pub enemy: Entity,
+    pub name: Option<String>,
 }
 
 #[derive(Resource, Default)]
 pub struct ComboTracker {
     current: u32,
+    best: u32,
     decay_timer: f32,
-    last_defeated: Option<Entity>,
+    last_defeated_entity: Option<Entity>,
+    last_defeated_name: Option<String>,
+    last_defeated_time: Option<f32>,
+}
+
+impl ComboTracker {
+    pub fn current(&self) -> u32 {
+        self.current
+    }
+
+    pub fn best(&self) -> u32 {
+        self.best
+    }
+
+    pub fn is_active(&self) -> bool {
+        self.current > 0
+    }
+
+    pub fn last_defeated_entity(&self) -> Option<Entity> {
+        self.last_defeated_entity
+    }
+
+    pub fn last_defeated_name(&self) -> Option<&str> {
+        self.last_defeated_name.as_deref()
+    }
+
+    pub fn last_defeated_elapsed(&self, now: f32) -> Option<f32> {
+        self.last_defeated_time.map(|t| (now - t).max(0.0))
+    }
+}
+
+#[derive(Resource)]
+struct CombatAudio {
+    hits: Vec<Handle<AudioSource>>,
+    next_index: usize,
 }
 
 fn queue_attack_inputs(
@@ -338,16 +392,28 @@ fn update_hit_sparks(
 }
 
 fn apply_attack_feedback(
+    mut commands: Commands,
     mut reader: EventReader<EnemyHitEvent>,
     mut camera_state: ResMut<CameraState>,
+    mut audio: ResMut<CombatAudio>,
 ) {
     let mut any = false;
     for _ in reader.read() {
         any = true;
     }
 
-    if any {
+    if any && !audio.hits.is_empty() {
         camera_state.desired_shake = camera_state.desired_shake.max(Vec2::splat(4.0));
+        let index = audio.next_index % audio.hits.len();
+        let handle = audio.hits[index].clone();
+        audio.next_index = (index + 1) % audio.hits.len();
+        commands.spawn((
+            AudioBundle {
+                source: handle,
+                settings: PlaybackSettings::DESPAWN,
+            },
+            Name::new("Hit SFX"),
+        ));
     }
 }
 
@@ -368,26 +434,38 @@ fn accumulate_combo_hits(
     if hit_registered {
         if tracker.decay_timer <= 0.0 {
             tracker.current = 0;
+            tracker.last_defeated_entity = None;
+            tracker.last_defeated_name = None;
+            tracker.last_defeated_time = None;
         }
 
         tracker.current = tracker.current.saturating_add(1);
         tracker.decay_timer = 1.5;
+        tracker.best = tracker.best.max(tracker.current);
     } else if tracker.decay_timer <= 0.0 && tracker.current > 0 {
         tracker.current = 0;
+        tracker.last_defeated_entity = None;
+        tracker.last_defeated_name = None;
+        tracker.last_defeated_time = None;
     }
 }
 
 fn reset_combo_on_death(
+    time: Res<Time>,
     mut tracker: ResMut<ComboTracker>,
     mut death_reader: EventReader<EnemyDeathEvent>,
 ) {
-    let mut reset = false;
+    let mut saw_death = false;
+    let now = time.elapsed_seconds();
+
     for event in death_reader.read() {
-        tracker.last_defeated = Some(event.enemy);
-        reset = true;
+        tracker.last_defeated_entity = Some(event.enemy);
+        tracker.last_defeated_name = event.name.clone();
+        tracker.last_defeated_time = Some(now);
+        saw_death = true;
     }
 
-    if reset && tracker.current > 0 {
+    if saw_death && tracker.current > 0 {
         tracker.current = 0;
         tracker.decay_timer = 0.0;
     }

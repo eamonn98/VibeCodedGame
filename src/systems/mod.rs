@@ -5,7 +5,7 @@ mod combat;
 mod movement;
 mod physics;
 
-pub use combat::{EnemyDeathEvent, EnemyHitEvent};
+pub use combat::{ComboTracker, EnemyDeathEvent, EnemyHitEvent};
 pub use movement::{MovementState, MovementSystemSet};
 
 pub struct SystemsPlugin;

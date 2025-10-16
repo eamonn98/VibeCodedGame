@@ -98,11 +98,17 @@ fn apply_enemy_hits(
     mut commands: Commands,
     mut reader: EventReader<EnemyHitEvent>,
     asset_server: Res<AssetServer>,
-    mut enemies: Query<(Entity, &Transform, &mut EnemyHealth, Option<&mut Sprite>)>,
+    mut enemies: Query<(
+        Entity,
+        &Transform,
+        &mut EnemyHealth,
+        Option<&mut Sprite>,
+        Option<&Name>,
+    )>,
     mut death_events: EventWriter<EnemyDeathEvent>,
 ) {
     for event in reader.read() {
-        if let Ok((entity, transform, mut health, sprite)) = enemies.get_mut(event.enemy) {
+        if let Ok((entity, transform, mut health, sprite, label)) = enemies.get_mut(event.enemy) {
             if health.current <= 0 {
                 continue;
             }
@@ -115,7 +121,11 @@ fn apply_enemy_hits(
             }
 
             if health.current <= 0 {
-                death_events.send(EnemyDeathEvent { enemy: entity });
+                let name = label.map(|n| n.as_str().to_string());
+                death_events.send(EnemyDeathEvent {
+                    enemy: entity,
+                    name,
+                });
                 commands.entity(entity).despawn_recursive();
             }
 

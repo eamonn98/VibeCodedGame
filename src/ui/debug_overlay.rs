@@ -2,7 +2,7 @@ use bevy::prelude::*;
 
 use crate::core::InputState;
 use crate::player::PlayerEntity;
-use crate::systems::MovementState;
+use crate::systems::{ComboTracker, MovementState};
 use crate::world::debug::{ChunkDebugStats, DebugTerrainSettings};
 use crate::world::{ChunkSettings, TerrainSettings, TileRegistry, WorldChunks};
 
@@ -21,6 +21,12 @@ struct TileInfoText;
 #[derive(Component)]
 struct ChunkStatsText;
 
+#[derive(Component)]
+struct ComboText;
+
+#[derive(Component)]
+struct ComboDefeatText;
+
 pub struct DebugOverlayPlugin;
 
 impl Plugin for DebugOverlayPlugin {
@@ -32,6 +38,8 @@ impl Plugin for DebugOverlayPlugin {
                 update_debug_toggle_text,
                 update_tile_info_text,
                 update_chunk_stats_text,
+                update_combo_text,
+                update_combo_defeat_text,
             ),
         );
     }
@@ -166,7 +174,7 @@ fn setup_debug_overlay(mut commands: Commands, asset_server: Res<AssetServer>) {
                     TextSection::new(
                         "frame g:0 u:0 r:0 un:0 | total g:0 un:0 loaded:0 toggles:0",
                         TextStyle {
-                            font,
+                            font: font.clone(),
                             font_size: 18.0,
                             color: Color::srgba(0.8, 0.8, 0.8, 1.0),
                         },
@@ -174,7 +182,144 @@ fn setup_debug_overlay(mut commands: Commands, asset_server: Res<AssetServer>) {
                 ]),
                 ChunkStatsText,
             ));
+
+            parent.spawn((
+                TextBundle::from_sections([
+                    TextSection::new(
+                        "Combo: ",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 18.0,
+                            color: Color::srgba(1.0, 1.0, 1.0, 1.0),
+                        },
+                    ),
+                    TextSection::new(
+                        "0",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 18.0,
+                            color: Color::srgba(0.6, 0.6, 0.6, 1.0),
+                        },
+                    ),
+                    TextSection::new(
+                        "  Best: ",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 16.0,
+                            color: Color::srgba(1.0, 1.0, 1.0, 0.8),
+                        },
+                    ),
+                    TextSection::new(
+                        "0",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 18.0,
+                            color: Color::srgba(0.6, 0.6, 0.6, 1.0),
+                        },
+                    ),
+                ]),
+                ComboText,
+            ));
+
+            parent.spawn((
+                TextBundle::from_sections([
+                    TextSection::new(
+                        "Last KO: ",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 16.0,
+                            color: Color::srgba(1.0, 1.0, 1.0, 0.9),
+                        },
+                    ),
+                    TextSection::new(
+                        "None",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 16.0,
+                            color: Color::srgba(0.6, 0.6, 0.6, 1.0),
+                        },
+                    ),
+                    TextSection::new(
+                        "",
+                        TextStyle {
+                            font,
+                            font_size: 14.0,
+                            color: Color::srgba(0.7, 0.7, 0.7, 1.0),
+                        },
+                    ),
+                ]),
+                ComboDefeatText,
+            ));
         });
+}
+
+fn update_combo_text(
+    mut query: Query<&mut Text, With<ComboText>>,
+    tracker: Option<Res<ComboTracker>>,
+) {
+    let Ok(mut text) = query.get_single_mut() else {
+        return;
+    };
+
+    let Some(tracker) = tracker else {
+        text.sections[1].value = "0".into();
+        text.sections[1].style.color = Color::srgba(0.6, 0.6, 0.6, 1.0);
+        text.sections[3].value = "0".into();
+        text.sections[3].style.color = Color::srgba(0.6, 0.6, 0.6, 1.0);
+        return;
+    };
+
+    let color = if tracker.is_active() {
+        Color::srgba(0.3, 0.9, 0.3, 1.0)
+    } else {
+        Color::srgba(0.6, 0.6, 0.6, 1.0)
+    };
+
+    text.sections[1].value = tracker.current().to_string();
+    text.sections[1].style.color = color;
+    text.sections[3].value = tracker.best().to_string();
+    text.sections[3].style.color = if tracker.best() > 0 {
+        Color::srgba(0.9, 0.8, 0.3, 1.0)
+    } else {
+        Color::srgba(0.6, 0.6, 0.6, 1.0)
+    };
+}
+
+fn update_combo_defeat_text(
+    mut query: Query<&mut Text, With<ComboDefeatText>>,
+    time: Res<Time>,
+    tracker: Option<Res<ComboTracker>>,
+) {
+    let Ok(mut text) = query.get_single_mut() else {
+        return;
+    };
+
+    let Some(tracker) = tracker else {
+        text.sections[1].value = "None".into();
+        text.sections[1].style.color = Color::srgba(0.6, 0.6, 0.6, 1.0);
+        text.sections[2].value.clear();
+        return;
+    };
+
+    if let Some(name) = tracker
+        .last_defeated_name()
+        .map(|n| n.to_string())
+        .or_else(|| tracker.last_defeated_entity().map(|e| format!("{:?}", e)))
+    {
+        text.sections[1].value = name;
+        text.sections[1].style.color = Color::srgba(0.9, 0.8, 0.3, 1.0);
+
+        if let Some(elapsed) = tracker.last_defeated_elapsed(time.elapsed_seconds()) {
+            text.sections[2].value = format!(" ({:.1}s ago)", elapsed);
+            text.sections[2].style.color = Color::srgba(0.8, 0.8, 0.8, 1.0);
+        } else {
+            text.sections[2].value.clear();
+        }
+    } else {
+        text.sections[1].value = "Unknown".into();
+        text.sections[1].style.color = Color::srgba(0.7, 0.7, 0.7, 1.0);
+        text.sections[2].value.clear();
+    }
 }
 
 fn update_collision_status(

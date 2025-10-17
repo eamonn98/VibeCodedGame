@@ -120,11 +120,10 @@ fn update_dash_and_velocity(
 }
 
 fn apply_physics_velocity(
-    time: Res<Time>,
-    time_scale: Res<TimeScale>,
+    _time: Res<Time>,
+    _time_scale: Res<TimeScale>,
     mut query: Query<(&mut Velocity, &MovementState, &mut Transform), With<PlayerEntity>>,
 ) {
-    let dt = time.delta_seconds() * time_scale.0;
     for (mut velocity, state, mut transform) in &mut query {
         velocity.linvel = state.velocity;
         transform.translation.x += state.desired_translation.x;

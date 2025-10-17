@@ -6,25 +6,25 @@
 Establish the Cargo project, directory structure, licensing, and initial README so subsequent work shares a common baseline.
 
 #### Subtasks
-- **Create workspace skeleton** *(Completed)*: Run `cargo new vibecoded-game --bin`, add `README.md`, `.gitignore`, and initial license file.
-- **Lay out directories** *(Completed)*: Add empty `src/`, `assets/`, `docs/`, `build/`, and `tests/` subfolders matching the architecture plan.
-- **Baseline commit** *(Completed)*: Document architecture assumptions in `docs/` and push an initial commit to seed CI and collaboration.
+- ✅ **Create workspace skeleton** *(Completed)*: Run `cargo new vibecoded-game --bin`, add `README.md`, `.gitignore`, and initial license file.
+- ✅ **Lay out directories** *(Completed)*: Add empty `src/`, `assets/`, `docs/`, `build/`, and `tests/` subfolders matching the architecture plan.
+- ✅ **Baseline commit** *(Completed)*: Document architecture assumptions in `docs/` and push an initial commit to seed CI and collaboration.
 
 ### Toolchain Pinning
 Keep contributors aligned on Rust versions and linting expectations.
 
 #### Subtasks
-- **Rust toolchain lock** *(Completed)*: Add `rust-toolchain.toml` specifying the desired stable channel and components.
-- **Cargo configuration** *(Not Started)*: Create `.cargo/config.toml` enabling `cargo fmt` and `cargo clippy` with project-wide flags.
-- **Setup note** *(Completed)*: Document installation instructions and toolchain validation steps in `docs/setup.md`.
+- ✅ **Rust toolchain lock** *(Completed)*: Add `rust-toolchain.toml` specifying the desired stable channel and components.
+- ✅ **Cargo configuration** *(Completed)*: Create `.cargo/config.toml` enabling `cargo fmt` and `cargo clippy` with project-wide flags.
+- ✅ **Setup note** *(Completed)*: Document installation instructions and toolchain validation steps in `docs/setup.md`.
 
 ### Continuous Integration
 Catch regressions early with automated formatting, linting, testing, and smoke builds.
 
 #### Subtasks
-- **Workflow skeleton** *(Completed)*: Add `.github/workflows/ci.yml` running `fmt`, `clippy`, and unit tests on push and PR.
-- **Cache optimization** *(Completed)*: Configure Rust cache actions for `cargo` registry and build artifacts to reduce run time.
-- **Cross-build smoke** *(Completed)*: Extend CI with a `cross` or target-specific job that produces Linux/macOS and Windows binaries.
+- ✅ **Workflow skeleton** *(Completed)*: Add `.github/workflows/ci.yml` running `fmt`, `clippy`, and unit tests on push and PR.
+- ✅ **Cache optimization** *(Completed)*: Configure Rust cache actions for `cargo` registry and build artifacts to reduce run time.
+- ✅ **Cross-build smoke** *(Completed)*: Extend CI with a `cross` or target-specific job that produces Linux/macOS and Windows binaries.
 
 ## Rendering & Visual Atmosphere
 
@@ -32,9 +32,9 @@ Catch regressions early with automated formatting, linting, testing, and smoke b
 Integrate Bevy app startup, window configuration, and asset hot reloading to accelerate iteration on visual features.
 
 #### Subtasks
-- **App entry point** *(Completed)*: Implement `src/main.rs` launching Bevy with default plugins and a placeholder scene.
-- **Window tuning** *(Completed)*: Configure resolution, VSync, and resize policies through a dedicated window plugin.
-- **Asset hot reload** *(Completed)*: Enable Bevy asset server settings for watching the `assets/` directory during development.
+- ✅ **App entry point** *(Completed)*: Implement `src/main.rs` launching Bevy with default plugins and a placeholder scene.
+- ✅ **Window tuning** *(Completed)*: Configure resolution, VSync, and resize policies through a dedicated window plugin.
+- ✅ **Asset hot reload** *(Completed)*: Enable Bevy asset server settings for watching the `assets/` directory during development.
 
 ### HD-2D Pipeline
 Implement sprite billboarding, tile mesh layering, depth sorting, and WGSL lighting shaders to produce the Octopath-inspired look.
@@ -66,7 +66,7 @@ Define conventions for sprites, normal maps, and materials; automate packing and
 Design ECS-friendly representations for tiles, chunks, biomes, and collision layers to support runtime generation and queries.
 
 #### Subtasks
-- **Component schema** *(Completed)*: Define structs/components for tile metadata, biome tags, and chunk coordinates.
+- ✅ **Component schema** *(Completed)*: Define structs/components for tile metadata, biome tags, and chunk coordinates.
 - **Resource registries** *(In Progress)*: Implement resources for world seeds, biome tables, and terrain materials.
 - **Unit tests** *(Not Started)*: Add targeted tests ensuring coordinate math and data serialization behave deterministically.
 
@@ -74,7 +74,7 @@ Design ECS-friendly representations for tiles, chunks, biomes, and collision lay
 Build configurable noise pipelines that output biome blends, elevation, and traversal blocking for each chunk.
 
 #### Subtasks
-- **Noise module** *(Completed)*: Integrate `noise` crate and expose seeded noise functions with adjustable parameters.
+- ✅ **Noise module** *(Completed)*: Integrate `noise` crate and expose seeded noise functions with adjustable parameters.
 - **Biome classifier** *(Not Started)*: Map noise outputs to biome descriptors, ensuring transitions remain smooth.
 - **Config surface** *(Not Started)*: Create RON/TOML config files allowing designers to tweak thresholds without code changes.
 
@@ -82,9 +82,9 @@ Build configurable noise pipelines that output biome blends, elevation, and trav
 Implement background generation, loading, and eviction of world chunks around the player while preserving determinism.
 
 #### Subtasks
-- **Chunk scheduler** *(Completed)*: Build a system that requests chunk generation based on camera/player position.
+- ✅ **Chunk scheduler** *(Completed)*: Build a system that requests chunk generation based on camera/player position.
 - **Async generation** *(Not Started)*: Use Bevy tasks or a lightweight thread pool to populate chunk data off the main thread.
-- **Retention policy** *(Completed)*: Implement rules for caching and evicting chunks, plus debug visualization of active regions.
+- ✅ **Retention policy** *(Completed)*: Implement rules for caching and evicting chunks, plus debug visualization of active regions.
 
 ### Collision & Navigation Maps
 Derive physics-ready colliders and navigation hints from generated data so gameplay systems have reliable spatial information.
@@ -100,8 +100,8 @@ Derive physics-ready colliders and navigation hints from generated data so gamep
 Develop top-down movement, dash mechanics, and animation state management that replicate Zelda-like responsiveness.
 
 #### Subtasks
-- **Input mapping** *(Completed)*: Configure keyboard/gamepad bindings and a state machine for player intents.
-- **Movement & dash** *(Completed)*: Implement acceleration curves, dash cooldown, and collision-resolving movement.
+- ✅ **Input mapping** *(Completed)*: Configure keyboard/gamepad bindings and a state machine for player intents.
+- ✅ **Movement & dash** *(Completed)*: Implement acceleration curves, dash cooldown, and collision-resolving movement.
 - **Animation states** *(Not Started)*: Wire sprite animations or blend trees to mirror facing, moving, and dashing.
 
 ### Combat Prototype
@@ -116,7 +116,7 @@ Implement a melee attack loop with hit detection, damage stubs, and basic feedba
 Introduce a simple enemy entity with placeholder behavior, providing a target for combat verification.
 
 #### Subtasks
-- **Dummy prefab** *(Completed)*: Create enemy sprites, stats, and spawn logic in the scene.
+- ✅ **Dummy prefab** *(Completed)*: Create enemy sprites, stats, and spawn logic in the scene.
 - **Behavior loop** *(In Progress)*: Implement a minimal state machine (idle, patrol, chase) reacting to player proximity.
 - **Metrics logging** *(Not Started)*: Emit telemetry events when the dummy is hit or defeated for tuning.
 
@@ -124,8 +124,8 @@ Introduce a simple enemy entity with placeholder behavior, providing a target fo
 Ensure the camera tracks the player smoothly and supports effects that emphasize combat hits.
 
 #### Subtasks
-- **Follow rig** *(Completed)*: Add a smoothing follow system with configurable damping and bounds.
-- **Shake module** *(Completed)*: Implement additive camera shake triggered by combat events.
+- ✅ **Follow rig** *(Completed)*: Add a smoothing follow system with configurable damping and bounds.
+- ✅ **Shake module** *(Completed)*: Implement additive camera shake triggered by combat events.
 - **User toggles** *(Not Started)*: Expose sliders in the debug UI to tune camera offsets and shake intensity.
 
 ## Systems & Support Infrastructure
@@ -176,7 +176,7 @@ Create automated or scripted benchmarks to confirm frame pacing and loading thre
 Produce setup guides, architecture summaries, and contribution checklists that prepare new collaborators for MVP development.
 
 #### Subtasks
-- **Setup guide** *(Completed)*: Write `docs/setup.md` covering tool installation and first run steps.
+- ✅ **Setup guide** *(Completed)*: Write `docs/setup.md` covering tool installation and first run steps.
 - **Architecture overview** *(Not Started)*: Author a living document summarizing systems, data flow, and extension points.
 - **Contribution checklist** *(Not Started)*: Publish expectations for branches, testing, and code review in `CONTRIBUTING.md`.
 

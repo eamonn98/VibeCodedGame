@@ -1,8 +1,9 @@
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 use crate::core::TimeScale;
 use crate::player::PlayerEntity;
-use crate::systems::MovementState;
+use crate::systems::{CollisionLayers, MovementState, PIXELS_PER_METER};
 use crate::systems::{EnemyDeathEvent, EnemyHitEvent};
 
 pub struct EnemyPlugin;
@@ -37,7 +38,7 @@ struct DamagePopup {
     velocity: Vec2,
 }
 
-fn spawn_dummy_enemy(mut commands: Commands) {
+fn spawn_dummy_enemy(mut commands: Commands, layers: Res<CollisionLayers>) {
     commands.spawn((
         SpriteBundle {
             sprite: Sprite {
@@ -49,6 +50,11 @@ fn spawn_dummy_enemy(mut commands: Commands) {
             ..Default::default()
         },
         MovementState::default(),
+        RigidBody::KinematicPositionBased,
+        Collider::ball(24.0 / PIXELS_PER_METER),
+        Friction::coefficient(1.0),
+        Restitution::coefficient(0.05),
+        layers.enemy_groups(),
         EnemyEntity,
         EnemyHealth {
             current: 3,

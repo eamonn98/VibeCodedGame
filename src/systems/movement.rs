@@ -1,5 +1,6 @@
 use bevy::ecs::schedule::SystemSet;
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
 
 use crate::core::{CameraState, InputState, TimeScale};
 use crate::player::PlayerEntity;
@@ -21,7 +22,13 @@ impl Plugin for MovementPlugin {
             )
             .add_systems(
                 Update,
-                update_dash_and_velocity.in_set(MovementSystemSet::Update),
+                (
+                    update_dash_and_velocity,
+                    apply_physics_velocity,
+                    reset_blocked_state,
+                )
+                    .chain()
+                    .in_set(MovementSystemSet::Update),
             );
     }
 }
@@ -109,5 +116,24 @@ fn update_dash_and_velocity(
 
     if dash_triggered {
         camera_state.desired_shake = Vec2::splat(6.0);
+    }
+}
+
+fn apply_physics_velocity(
+    time: Res<Time>,
+    time_scale: Res<TimeScale>,
+    mut query: Query<(&mut Velocity, &MovementState, &mut Transform), With<PlayerEntity>>,
+) {
+    let dt = time.delta_seconds() * time_scale.0;
+    for (mut velocity, state, mut transform) in &mut query {
+        velocity.linvel = state.velocity;
+        transform.translation.x += state.desired_translation.x;
+        transform.translation.y += state.desired_translation.y;
+    }
+}
+
+fn reset_blocked_state(mut query: Query<&mut MovementState, With<PlayerEntity>>) {
+    for mut state in &mut query {
+        state.blocked = false;
     }
 }

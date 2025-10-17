@@ -4,7 +4,7 @@ mod camera;
 mod input;
 mod time;
 
-pub use camera::CameraState;
+pub use camera::{CameraSettings, CameraState};
 pub use input::InputState;
 pub use time::TimeScale;
 

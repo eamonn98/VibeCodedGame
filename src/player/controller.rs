@@ -1,4 +1,7 @@
 use bevy::prelude::*;
+use bevy_rapier2d::prelude::*;
+
+use crate::systems::{CollisionLayers, PIXELS_PER_METER};
 
 pub struct ControllerPlugin;
 
@@ -11,18 +14,30 @@ impl Plugin for ControllerPlugin {
 #[derive(Component)]
 pub struct PlayerEntity;
 
-fn spawn_placeholder_player(mut commands: Commands) {
-    commands.spawn((
-        SpriteBundle {
-            sprite: Sprite {
-                color: Color::srgb(0.2, 0.7, 0.95),
-                custom_size: Some(Vec2::splat(48.0)),
+fn spawn_placeholder_player(mut commands: Commands, layers: Res<CollisionLayers>) {
+    commands
+        .spawn((
+            SpriteBundle {
+                sprite: Sprite {
+                    color: Color::srgb(0.2, 0.7, 0.95),
+                    custom_size: Some(Vec2::splat(48.0)),
+                    ..Default::default()
+                },
+                transform: Transform::from_xyz(0.0, 0.0, 1.0),
                 ..Default::default()
             },
-            transform: Transform::from_xyz(0.0, 0.0, 1.0),
-            ..Default::default()
-        },
-        PlayerEntity,
-        Name::new("Player"),
-    ));
+            RigidBody::Dynamic,
+            Velocity::zero(),
+            Damping {
+                linear_damping: 12.0,
+                angular_damping: 4.0,
+            },
+            Collider::ball(24.0 / PIXELS_PER_METER),
+            Friction::coefficient(1.2),
+            Restitution::coefficient(0.05),
+            layers.player_groups(),
+            LockedAxes::ROTATION_LOCKED,
+            PlayerEntity,
+            Name::new("Player"),
+        ));
 }

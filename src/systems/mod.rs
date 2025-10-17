@@ -5,6 +5,8 @@ mod combat;
 mod movement;
 mod physics;
 
+pub use physics::{CollisionLayers, PhysicsDebugSettings, PhysicsPlugin, PIXELS_PER_METER};
+
 pub use combat::{ComboTracker, EnemyDeathEvent, EnemyHitEvent};
 pub use movement::{MovementState, MovementSystemSet};
 

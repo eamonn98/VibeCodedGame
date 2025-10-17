@@ -2,6 +2,8 @@ use bevy::asset::AssetPlugin;
 use bevy::audio::AudioPlugin;
 use bevy::prelude::*;
 use bevy::window::WindowPlugin;
+use tracing::info;
+use tracing_subscriber::{fmt, EnvFilter};
 
 use crate::config;
 use crate::core;
@@ -13,6 +15,8 @@ use crate::ui;
 use crate::world;
 
 pub fn run() {
+    init_tracing();
+    info!("Starting VibeCoded Game app");
     App::new()
         .add_plugins(
             DefaultPlugins
@@ -49,4 +53,12 @@ impl Plugin for GamePlugin {
             ui::UiPlugin,
         ));
     }
+}
+
+fn init_tracing() {
+    let filter = EnvFilter::try_from_default_env()
+        .or_else(|_| EnvFilter::try_new("info"))
+        .unwrap_or_else(|_| EnvFilter::new("info"));
+
+    let _ = fmt().with_env_filter(filter).with_target(false).try_init();
 }

@@ -29,6 +29,10 @@ impl CollisionLayers {
     pub fn enemy_groups(&self) -> CollisionGroups {
         CollisionGroups::new(self.enemy, self.player | self.terrain)
     }
+
+    pub fn terrain_groups(&self) -> CollisionGroups {
+        CollisionGroups::new(self.terrain, self.player | self.enemy)
+    }
 }
 
 pub struct PhysicsPlugin;

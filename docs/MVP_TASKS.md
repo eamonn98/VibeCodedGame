@@ -48,7 +48,7 @@ Implement sprite billboarding, tile mesh layering, depth sorting, and WGSL light
 Shape the final image with cinematic effects while maintaining Zelda-like responsiveness.
 
 #### Subtasks
-- **Camera controller** *(In Progress)*: Create a camera plugin supporting orbit, zoom limits, and follow offset.
+- **Camera controller** *(Completed)*: Create a camera plugin supporting orbit, zoom limits, and follow offset.
 - **Post-process stack** *(Not Started)*: Implement depth-of-field, bloom, and color grading passes with tunable settings.
 - **Performance guardrails** *(Not Started)*: Add instrumentation to monitor frame time and adjust default quality presets.
 
@@ -90,7 +90,7 @@ Implement background generation, loading, and eviction of world chunks around th
 Derive physics-ready colliders and navigation hints from generated data so gameplay systems have reliable spatial information.
 
 #### Subtasks
-- **Collider extraction** *(In Progress)*: Convert terrain blocks into collider primitives compatible with the physics engine.
+- **Collider extraction** *(Completed)*: Convert terrain blocks into collider primitives compatible with the physics engine.
 - **Nav data bake** *(Not Started)*: Generate lightweight navigation hints or flow fields for AI pathing.
 - **Verification harness** *(In Progress)*: Add tests or debug overlays that reveal collision and navigation layers in-game.
 
@@ -126,7 +126,7 @@ Ensure the camera tracks the player smoothly and supports effects that emphasize
 #### Subtasks
 - ✅ **Follow rig** *(Completed)*: Add a smoothing follow system with configurable damping and bounds.
 - ✅ **Shake module** *(Completed)*: Implement additive camera shake triggered by combat events.
-- **User toggles** *(Not Started)*: Expose sliders in the debug UI to tune camera offsets and shake intensity.
+- **User toggles** *(Completed)*: Expose sliders in the debug UI to tune camera offsets and shake intensity.
 
 ## Systems & Support Infrastructure
 
@@ -134,16 +134,16 @@ Ensure the camera tracks the player smoothly and supports effects that emphasize
 Configure collision layers, response handling, and optional kinematic bodies to support movement and combat interactions.
 
 #### Subtasks
-- **Physics crate selection** *(Not Started)*: Integrate a physics plugin (e.g., Rapier) and set up foundational resources.
-- **Layer matrix** *(Not Started)*: Define collision layers/masks for player, enemies, terrain, and interactive objects.
-- **Debug rendering** *(Not Started)*: Add a toggleable overlay to visualize colliders at runtime.
+- **Physics crate selection** *(Completed)*: Integrate a physics plugin (Rapier) and set up foundational resources.
+- **Layer matrix** *(Completed)*: Define collision layers/masks for player, enemies, terrain, and interactive objects.
+- **Debug rendering** *(Completed)*: Add a toggleable overlay to visualize colliders at runtime.
 
 ### Debug & Tuning UI
 Embed `bevy_egui` panels for runtime parameter tweaking (lighting, biome seeds, combat timings) to accelerate iteration.
 
 #### Subtasks
-- **UI bootstrap** *(Not Started)*: Install `bevy_egui` plugin and create a root debug window accessible via hotkey.
-- **Control panels** *(Not Started)*: Build tabs for rendering, worldgen, and gameplay parameters with live bindings.
+- **UI bootstrap** *(Completed)*: Install `bevy_egui` plugin and create a root debug window accessible via hotkey.
+- **Control panels** *(In Progress)*: Build tabs for rendering, worldgen, and gameplay parameters with live bindings.
 - **Preset management** *(Not Started)*: Implement save/load routines for debug parameter profiles.
 
 ### Telemetry & Logging

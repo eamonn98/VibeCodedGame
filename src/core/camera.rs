@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use crate::config::AppConfig;
 use crate::core::InputState;
 use crate::player::PlayerEntity;
+use crate::world::ChunkSettings;
 
 pub struct CameraPlugin;
 
@@ -50,7 +51,15 @@ impl Default for CameraState {
     }
 }
 
-fn setup_camera(mut commands: Commands, config: Res<AppConfig>) {
+fn setup_camera(
+    mut commands: Commands,
+    config: Res<AppConfig>,
+    chunk_settings: Res<ChunkSettings>,
+) {
+    let chunk_dims = chunk_settings.chunk_dimensions.as_vec2();
+    let tile_size = chunk_settings.tile_size;
+    let terrain_extent = chunk_dims * tile_size * 0.5;
+
     commands.spawn((
         Camera2dBundle {
             camera: Camera {
@@ -61,6 +70,7 @@ fn setup_camera(mut commands: Commands, config: Res<AppConfig>) {
                 scale: 1.0,
                 ..Default::default()
             },
+            transform: Transform::from_xyz(terrain_extent.x, terrain_extent.y, 999.9),
             ..Default::default()
         },
         Name::new(format!("{} Camera", config.window_title)),
@@ -74,40 +84,56 @@ fn toggle_follow(input_state: Res<InputState>, mut camera_state: ResMut<CameraSt
 }
 
 fn align_initial_camera(
-    mut camera_query: Query<&mut Transform, With<Camera>>,
-    player_query: Query<&Transform, With<PlayerEntity>>,
+    mut queries: ParamSet<(
+        Query<&mut Transform, With<Camera>>,
+        Query<&Transform, With<PlayerEntity>>,
+    )>,
 ) {
-    let Ok(player_transform) = player_query.get_single() else {
-        return;
+    let player_translation = {
+        let player_query = queries.p1();
+        match player_query.get_single() {
+            Ok(transform) => transform.translation,
+            Err(_) => return,
+        }
     };
+
+    let mut camera_query = queries.p0();
     let Ok(mut camera_transform) = camera_query.get_single_mut() else {
         return;
     };
 
-    camera_transform.translation.x = player_transform.translation.x;
-    camera_transform.translation.y = player_transform.translation.y;
+    camera_transform.translation.x = player_translation.x;
+    camera_transform.translation.y = player_translation.y;
 }
 
 fn follow_player(
     settings: Res<CameraSettings>,
     camera_state: Res<CameraState>,
-    mut camera_query: Query<&mut Transform, With<Camera>>,
-    player_query: Query<&Transform, With<PlayerEntity>>,
+    mut queries: ParamSet<(
+        Query<&mut Transform, With<Camera>>,
+        Query<&Transform, With<PlayerEntity>>,
+    )>,
     time: Res<Time>,
 ) {
     if !camera_state.follow_enabled {
         return;
     }
 
-    let Ok(player_transform) = player_query.get_single() else {
-        return;
+    let player_translation = {
+        let player_query = queries.p1();
+        match player_query.get_single() {
+            Ok(transform) => transform.translation,
+            Err(_) => return,
+        }
     };
+
+    let mut camera_query = queries.p0();
     let Ok(mut camera_transform) = camera_query.get_single_mut() else {
         return;
     };
 
     let current = camera_transform.translation.truncate();
-    let target = player_transform.translation.truncate();
+    let target = player_translation.truncate();
     let delta = target - current;
     let offset = delta.clamp_length_max(settings.max_distance);
 

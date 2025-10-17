@@ -68,6 +68,7 @@ Design ECS-friendly representations for tiles, chunks, biomes, and collision lay
 #### Subtasks
 - ✅ **Component schema** *(Completed)*: Define structs/components for tile metadata, biome tags, and chunk coordinates.
 - **Resource registries** *(In Progress)*: Implement resources for world seeds, biome tables, and terrain materials.
+- ✅ **Terrain rendering link** *(Completed)*: Centered the camera/player over generated terrain and corrected world-space tile placement in `sync_terrain_tile_sprites()` so chunks now render as expected.
 - **Unit tests** *(Not Started)*: Add targeted tests ensuring coordinate math and data serialization behave deterministically.
 
 ### Noise-Based Terrain Generator
@@ -145,6 +146,12 @@ Embed `bevy_egui` panels for runtime parameter tweaking (lighting, biome seeds, 
 - **UI bootstrap** *(Completed)*: Install `bevy_egui` plugin and create a root debug window accessible via hotkey.
 - **Control panels** *(In Progress)*: Build tabs for rendering, worldgen, and gameplay parameters with live bindings.
 - **Preset management** *(Not Started)*: Implement save/load routines for debug parameter profiles.
+
+### Runtime Stability
+Document graphics/runtime quirks encountered during development and track mitigations.
+
+#### Subtasks
+- **Wayland shutdown crash** *(Known Issue)*: Closing the window under KDE Wayland with NVIDIA drivers triggers a post-exit segfault despite clean runtime; consider testing with `WINIT_UNIX_BACKEND=x11` and updating `wgpu`/driver versions.
 
 ### Telemetry & Logging
 Wire `tracing` spans and structured logs so performance and gameplay events can be analyzed post-session.

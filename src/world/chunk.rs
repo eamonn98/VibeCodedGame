@@ -171,7 +171,6 @@ pub struct ChunkSettings {
 }
 
 impl Default for ChunkSettings {
-    #[allow(dead_code)]
     fn default() -> Self {
         Self {
             tile_size: Vec2::splat(48.0),

@@ -46,11 +46,11 @@ impl Plugin for GamePlugin {
             config::ConfigPlugin,
             core::CorePlugin,
             rendering::RenderingPlugin,
+            systems::SystemsPlugin,
+            ui::UiPlugin,
             world::WorldPlugin,
             enemy::EnemyPlugin,
             player::PlayerPlugin,
-            systems::SystemsPlugin,
-            ui::UiPlugin,
         ));
     }
 }

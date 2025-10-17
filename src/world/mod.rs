@@ -4,6 +4,7 @@ mod chunk;
 pub mod debug;
 pub mod generation;
 mod physics;
+mod render;
 mod tiles;
 
 pub use chunk::{ChunkSettings, WorldChunks};
@@ -20,6 +21,7 @@ impl Plugin for WorldPlugin {
             tiles::TilesPlugin,
             generation::GenerationPlugin,
             physics::WorldPhysicsPlugin,
+            render::TerrainRenderPlugin,
         ));
     }
 }

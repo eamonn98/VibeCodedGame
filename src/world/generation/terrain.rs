@@ -3,6 +3,7 @@ use bevy::prelude::*;
 use noise::{NoiseFn, Perlin};
 use std::collections::HashSet;
 
+use crate::player::PlayerEntity;
 use crate::world::chunk::{
     ChunkCoord, ChunkLayer, ChunkManifest, ChunkSettings, ChunkTiles, WorldChunks,
 };
@@ -56,7 +57,7 @@ fn generate_visible_chunks(
     terrain_settings: Res<TerrainSettings>,
     noise_settings: Res<NoiseSettings>,
     seed: Res<WorldSeed>,
-    player_query: Query<&Transform>,
+    player_query: Query<&Transform, With<PlayerEntity>>,
     mut stats: ResMut<ChunkDebugStats>,
 ) {
     let Ok(player_transform) = player_query.get_single() else {

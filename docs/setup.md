@@ -14,4 +14,10 @@
 - Use `cargo fmt` before committing to enforce formatting.
 - Run `cargo lint` (alias for `cargo clippy -- -D warnings`) during development to catch issues early.
 - `cargo run` launches the application; assets hot-reload when run in debug mode.
+- Profile gameplay and rendering with `cargo run --release` to observe near-production frame pacing.
 - For iterative development, `cargo watch -x run` provides live rebuilds.
+
+## Runtime Debug Controls
+- **F3** – Toggle the EGUI debug panel for camera, physics, and world generation settings.
+- **V** – Show or hide the terrain tile overlay inside the world debug view.
+- **N** – Toggle the navigation/collider overlay for verifying walkability masks.

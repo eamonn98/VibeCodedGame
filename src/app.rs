@@ -1,5 +1,4 @@
 use bevy::asset::AssetPlugin;
-use bevy::audio::AudioPlugin;
 use bevy::prelude::*;
 use bevy::window::WindowPlugin;
 use tracing::info;
@@ -42,7 +41,6 @@ pub struct GamePlugin;
 impl Plugin for GamePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins((
-            AudioPlugin::default(),
             config::ConfigPlugin,
             core::CorePlugin,
             rendering::RenderingPlugin,

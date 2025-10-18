@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::core::InputState;
 use crate::player::PlayerEntity;
 use crate::systems::{ComboTracker, MovementState};
-use crate::world::debug::{ChunkDebugStats, DebugTerrainSettings};
+use crate::world::debug::{ChunkDebugStats, DebugTerrainSettings, NavigationDebugSettings};
 use crate::world::{ChunkSettings, TerrainSettings, TileRegistry, WorldChunks};
 
 #[derive(Component)]
@@ -22,6 +22,9 @@ struct TileInfoText;
 struct ChunkStatsText;
 
 #[derive(Component)]
+struct NavigationToggleText;
+
+#[derive(Component)]
 struct ComboText;
 
 #[derive(Component)]
@@ -36,6 +39,7 @@ impl Plugin for DebugOverlayPlugin {
             (
                 update_collision_status,
                 update_debug_toggle_text,
+                update_navigation_toggle_text,
                 update_tile_info_text,
                 update_chunk_stats_text,
                 update_combo_text,
@@ -137,6 +141,36 @@ fn setup_debug_overlay(mut commands: Commands, asset_server: Res<AssetServer>) {
                     ),
                 ]),
                 DebugToggleText,
+            ));
+
+            parent.spawn((
+                TextBundle::from_sections([
+                    TextSection::new(
+                        "Nav Overlay: ",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 18.0,
+                            color: Color::srgba(1.0, 1.0, 1.0, 1.0),
+                        },
+                    ),
+                    TextSection::new(
+                        "hidden",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 18.0,
+                            color: Color::srgba(0.6, 0.6, 0.6, 1.0),
+                        },
+                    ),
+                    TextSection::new(
+                        " (press N)",
+                        TextStyle {
+                            font: font.clone(),
+                            font_size: 14.0,
+                            color: Color::srgba(1.0, 1.0, 1.0, 0.7),
+                        },
+                    ),
+                ]),
+                NavigationToggleText,
             ));
 
             parent.spawn((
@@ -361,6 +395,29 @@ fn update_debug_toggle_text(
     if debug_settings.show_tiles {
         visible_section.value = "visible".into();
         visible_section.style.color = Color::srgba(0.3, 0.9, 0.3, 1.0);
+    } else {
+        visible_section.value = "hidden".into();
+        visible_section.style.color = Color::srgba(0.6, 0.6, 0.6, 1.0);
+    }
+}
+
+fn update_navigation_toggle_text(
+    mut query: Query<&mut Text, With<NavigationToggleText>>,
+    input: Res<InputState>,
+    mut nav_settings: ResMut<NavigationDebugSettings>,
+) {
+    let Ok(mut text) = query.get_single_mut() else {
+        return;
+    };
+
+    if input.toggle_navigation_overlay {
+        nav_settings.show_navigation = !nav_settings.show_navigation;
+    }
+
+    let visible_section = &mut text.sections[1];
+    if nav_settings.show_navigation {
+        visible_section.value = "visible".into();
+        visible_section.style.color = Color::srgba(0.9, 0.3, 0.3, 1.0);
     } else {
         visible_section.value = "hidden".into();
         visible_section.style.color = Color::srgba(0.6, 0.6, 0.6, 1.0);

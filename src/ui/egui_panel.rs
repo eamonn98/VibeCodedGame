@@ -1,7 +1,11 @@
+use std::f32::consts::PI;
+
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 
 use crate::core::{CameraSettings, CameraState, TimeScale};
+use crate::rendering::lighting::{DirectionalLight2d, LightingSettings};
+use crate::rendering::post_processing::PostProcessingSettings;
 use crate::systems::PhysicsDebugSettings;
 use crate::world::generation::{NoiseSettings, TerrainSettings};
 
@@ -40,6 +44,9 @@ fn draw_panel(
     mut physics_debug: ResMut<PhysicsDebugSettings>,
     mut terrain_settings: ResMut<TerrainSettings>,
     mut noise_settings: ResMut<NoiseSettings>,
+    mut lighting_settings: ResMut<LightingSettings>,
+    mut directional_lights: Query<&mut DirectionalLight2d>,
+    mut post_settings: ResMut<PostProcessingSettings>,
 ) {
     if !state.open {
         return;
@@ -70,7 +77,16 @@ fn draw_panel(
 
                 egui::CollapsingHeader::new("Rendering")
                     .default_open(false)
-                    .show(ui, draw_rendering_tab);
+                    .show(ui, |ui| {
+                        let mut primary_light = directional_lights.iter_mut().next();
+                        let primary_light_mut = primary_light.as_deref_mut();
+                        draw_rendering_tab(
+                            ui,
+                            &mut lighting_settings,
+                            primary_light_mut,
+                            &mut post_settings,
+                        );
+                    });
 
                 egui::CollapsingHeader::new("World Gen")
                     .default_open(false)
@@ -146,24 +162,108 @@ fn draw_physics_tab(ui: &mut egui::Ui, physics_debug: &mut ResMut<PhysicsDebugSe
     }
 }
 
-fn draw_rendering_tab(ui: &mut egui::Ui) {
-    ui.heading("Camera Effects");
-    ui.label("Post-processing controls are placeholders.");
-    let mut bloom = 0.0_f32;
-    ui.add_enabled(
-        false,
-        egui::Slider::new(&mut bloom, 0.0..=1.0).text("Bloom"),
-    );
-    let mut vignette = 0.0_f32;
-    ui.add_enabled(
-        false,
-        egui::Slider::new(&mut vignette, 0.0..=1.0).text("Vignette"),
-    );
-    let mut aberration = 0.0_f32;
-    ui.add_enabled(
-        false,
-        egui::Slider::new(&mut aberration, 0.0..=1.0).text("Chromatic Aberration"),
-    );
+fn draw_rendering_tab(
+    ui: &mut egui::Ui,
+    lighting_settings: &mut LightingSettings,
+    mut primary_light: Option<&mut DirectionalLight2d>,
+    post_settings: &mut PostProcessingSettings,
+) {
+    ui.heading("Lighting");
+
+    let mut ambient_intensity = lighting_settings.ambient_intensity;
+    if ui
+        .add(egui::Slider::new(&mut ambient_intensity, 0.0..=1.5).text("Ambient Intensity"))
+        .changed()
+    {
+        lighting_settings.ambient_intensity = ambient_intensity;
+    }
+
+    let mut normal_strength = lighting_settings.normal_strength;
+    if ui
+        .add(egui::Slider::new(&mut normal_strength, 0.0..=2.5).text("Normal Strength"))
+        .changed()
+    {
+        lighting_settings.normal_strength = normal_strength;
+    }
+
+    if let Some(light) = primary_light.as_deref_mut() {
+        ui.separator();
+        ui.label("Directional Light");
+
+        let mut intensity = light.intensity;
+        if ui
+            .add(egui::Slider::new(&mut intensity, 0.0..=3.0).text("Intensity"))
+            .changed()
+        {
+            light.intensity = intensity;
+        }
+
+        let mut angle = light.direction.y.atan2(light.direction.x);
+        if ui
+            .add(egui::Slider::new(&mut angle, -PI..=PI).text("Direction"))
+            .changed()
+        {
+            let dir = Vec2::new(angle.cos(), angle.sin()).normalize_or_zero();
+            light.direction = if dir == Vec2::ZERO {
+                light.direction
+            } else {
+                dir
+            };
+        }
+    } else {
+        ui.separator();
+        ui.label("No directional light available");
+    }
+
+    ui.separator();
+    ui.heading("Post Processing");
+
+    let mut bloom_enabled = post_settings.bloom_enabled;
+    if ui.checkbox(&mut bloom_enabled, "Bloom").changed() {
+        post_settings.bloom_enabled = bloom_enabled;
+    }
+
+    ui.add_enabled_ui(post_settings.bloom_enabled, |ui| {
+        let mut bloom_intensity = post_settings.bloom_intensity;
+        if ui
+            .add(egui::Slider::new(&mut bloom_intensity, 0.0..=2.0).text("Bloom Intensity"))
+            .changed()
+        {
+            post_settings.bloom_intensity = bloom_intensity;
+        }
+
+        let mut bloom_threshold = post_settings.bloom_threshold;
+        if ui
+            .add(egui::Slider::new(&mut bloom_threshold, -5.0..=5.0).text("Bloom Threshold"))
+            .changed()
+        {
+            post_settings.bloom_threshold = bloom_threshold;
+        }
+    });
+
+    ui.separator();
+    let mut vignette_enabled = post_settings.vignette_enabled;
+    if ui.checkbox(&mut vignette_enabled, "Vignette").changed() {
+        post_settings.vignette_enabled = vignette_enabled;
+    }
+
+    ui.add_enabled_ui(post_settings.vignette_enabled, |ui| {
+        let mut intensity = post_settings.vignette_intensity;
+        if ui
+            .add(egui::Slider::new(&mut intensity, 0.0..=1.0).text("Vignette Intensity"))
+            .changed()
+        {
+            post_settings.vignette_intensity = intensity;
+        }
+
+        let mut power = post_settings.vignette_power;
+        if ui
+            .add(egui::Slider::new(&mut power, 0.5..=4.0).text("Vignette Power"))
+            .changed()
+        {
+            post_settings.vignette_power = power;
+        }
+    });
 }
 
 fn draw_world_tab(

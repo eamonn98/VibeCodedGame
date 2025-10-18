@@ -1,3 +1,4 @@
+use bevy::core_pipeline::bloom::BloomSettings;
 use bevy::prelude::*;
 
 use crate::config::AppConfig;
@@ -64,6 +65,7 @@ fn setup_camera(
         Camera2dBundle {
             camera: Camera {
                 order: 0,
+                hdr: true,
                 ..Default::default()
             },
             projection: OrthographicProjection {
@@ -73,6 +75,7 @@ fn setup_camera(
             transform: Transform::from_xyz(terrain_extent.x, terrain_extent.y, 999.9),
             ..Default::default()
         },
+        BloomSettings::default(),
         Name::new(format!("{} Camera", config.window_title)),
     ));
 }

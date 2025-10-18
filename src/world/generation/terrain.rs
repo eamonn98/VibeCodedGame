@@ -8,7 +8,7 @@ use crate::world::chunk::{
     ChunkCoord, ChunkLayer, ChunkManifest, ChunkSettings, ChunkTiles, WorldChunks,
 };
 use crate::world::debug::ChunkDebugStats;
-use crate::world::generation::{NoiseSettings, WorldSeed};
+use crate::world::generation::{BiomeRegistry, NoiseSettings, WorldSeed};
 use crate::world::tiles::TileId;
 
 #[derive(Resource)]
@@ -38,8 +38,14 @@ impl Plugin for TerrainPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TerrainSettings>()
             .add_systems(Startup, setup_chunk_layers)
+            .add_event::<TerrainChunkUpdated>()
             .add_systems(Update, generate_visible_chunks);
     }
+}
+
+#[derive(Event, Clone, Copy, Debug)]
+pub struct TerrainChunkUpdated {
+    pub coord: ChunkCoord,
 }
 
 fn setup_chunk_layers(
@@ -57,8 +63,10 @@ fn generate_visible_chunks(
     terrain_settings: Res<TerrainSettings>,
     noise_settings: Res<NoiseSettings>,
     seed: Res<WorldSeed>,
+    biomes: Res<BiomeRegistry>,
     player_query: Query<&Transform, With<PlayerEntity>>,
     mut stats: ResMut<ChunkDebugStats>,
+    mut updated_events: EventWriter<TerrainChunkUpdated>,
 ) {
     let Ok(player_transform) = player_query.get_single() else {
         return;
@@ -108,6 +116,7 @@ fn generate_visible_chunks(
                         terrain_settings.ground_layer,
                         terrain_settings.walkable_tile,
                         terrain_settings.blocking_tile,
+                        &biomes,
                         &perlin,
                         sample_scale,
                         persistence,
@@ -116,6 +125,7 @@ fn generate_visible_chunks(
                     );
                     chunk_tiles.mark_clean();
                     updated += 1;
+                    updated_events.send(TerrainChunkUpdated { coord });
                 } else {
                     reused += 1;
                 }
@@ -129,6 +139,7 @@ fn generate_visible_chunks(
                     terrain_settings.ground_layer,
                     terrain_settings.walkable_tile,
                     terrain_settings.blocking_tile,
+                    &biomes,
                     &perlin,
                     sample_scale,
                     persistence,
@@ -138,6 +149,7 @@ fn generate_visible_chunks(
                 chunk_tiles.mark_clean();
                 chunks.loaded.insert(coord, chunk_tiles);
                 generated += 1;
+                updated_events.send(TerrainChunkUpdated { coord });
             }
         }
     }
@@ -181,6 +193,7 @@ fn generate_chunk_tiles(
     layer_id: ChunkLayer,
     walkable_tile: TileId,
     blocking_tile: TileId,
+    biomes: &BiomeRegistry,
     perlin: &Perlin,
     sample_scale: f64,
     persistence: f64,
@@ -188,7 +201,6 @@ fn generate_chunk_tiles(
     threshold: f64,
 ) {
     let layer = chunk_tiles.ensure_layer(layer_id, chunk_size);
-    layer.fill(walkable_tile);
 
     let chunk_origin = coord.0 * chunk_dims_i;
 
@@ -216,9 +228,22 @@ fn generate_chunk_tiles(
                 0.0
             };
 
-            if noise_value > threshold {
-                layer.set(x, y, blocking_tile);
-            }
+            let default_tile = if noise_value > threshold {
+                blocking_tile
+            } else {
+                walkable_tile
+            };
+
+            let tile = select_biome_tile(biomes, noise_value).unwrap_or(default_tile);
+            layer.set(x, y, tile);
         }
     }
+}
+
+fn select_biome_tile(biomes: &BiomeRegistry, noise_value: f64) -> Option<TileId> {
+    biomes
+        .entries
+        .iter()
+        .find(|entry| entry.noise_range.contains(&noise_value))
+        .map(|entry| entry.tile_id)
 }

@@ -9,6 +9,103 @@ pub struct ChunkDebugSprite {
     pub local: UVec2,
 }
 
+fn sync_navigation_debug_sprites(
+    mut commands: Commands,
+    nav_settings: Res<NavigationDebugSettings>,
+    chunk_settings: Res<ChunkSettings>,
+    terrain_settings: Res<TerrainSettings>,
+    tiles: Res<TileRegistry>,
+    chunks: Res<WorldChunks>,
+    mut existing: Query<(
+        Entity,
+        &mut Transform,
+        &mut Sprite,
+        &mut Visibility,
+        &mut Name,
+        &NavigationDebugSprite,
+    )>,
+) {
+    let tile_size = chunk_settings.tile_size;
+    if tile_size.x <= 0.0 || tile_size.y <= 0.0 {
+        return;
+    }
+
+    if !nav_settings.show_navigation {
+        for (_, _, _, mut visibility, _, _) in existing.iter_mut() {
+            *visibility = Visibility::Hidden;
+        }
+        return;
+    }
+
+    let mut desired: HashMap<NavigationDebugSprite, (Vec3, Color, String)> = HashMap::new();
+
+    let chunk_dims = chunk_settings.chunk_dimensions;
+    let chunk_dims_f = chunk_dims.as_vec2();
+    let tile_half = tile_size * 0.5;
+
+    for (&coord, chunk) in chunks.iter() {
+        let Some(layer) = chunk.layers.get(&terrain_settings.ground_layer) else {
+            continue;
+        };
+
+        for y in 0..layer.size.y {
+            for x in 0..layer.size.x {
+                let index = (y * layer.size.x + x) as usize;
+                let tile_id = layer.tiles[index];
+
+                if tiles.is_walkable(tile_id) {
+                    continue;
+                }
+
+                let meta = NavigationDebugSprite {
+                    chunk: coord.0,
+                    local: UVec2::new(x, y),
+                };
+
+                let chunk_origin_tiles = coord.0.as_vec2() * chunk_dims_f;
+                let chunk_origin_world = chunk_origin_tiles * tile_size;
+                let offset = Vec2::new(x as f32, y as f32) * tile_size;
+                let position = chunk_origin_world + offset + tile_half;
+
+                let translation = Vec3::new(position.x, position.y, 15.0);
+                let color = Color::srgba(0.9, 0.25, 0.25, 0.65);
+                let label = format!("Nav Block ({}, {}) [{}:{}]", coord.0.x, coord.0.y, x, y);
+
+                desired.insert(meta, (translation, color, label));
+            }
+        }
+    }
+
+    for (_, mut transform, mut sprite, mut visibility, mut name, meta) in existing.iter_mut() {
+        if let Some((translation, color, label)) = desired.remove(meta) {
+            transform.translation = translation;
+            sprite.color = color;
+            sprite.custom_size = Some(tile_size * 0.45);
+            *visibility = Visibility::Visible;
+            name.set(label);
+        } else {
+            *visibility = Visibility::Hidden;
+        }
+    }
+
+    for (meta, (translation, color, label)) in desired {
+        commands.spawn((
+            SpriteBundle {
+                sprite: Sprite {
+                    color,
+                    custom_size: Some(tile_size * 0.45),
+                    ..Default::default()
+                },
+                transform: Transform::from_translation(translation),
+                visibility: Visibility::Visible,
+                ..Default::default()
+            },
+            meta,
+            Name::new(label),
+        ));
+    }
+}
+
 #[derive(Resource)]
 pub struct DebugTerrainSettings {
     pub show_tiles: bool,
@@ -17,6 +114,19 @@ pub struct DebugTerrainSettings {
 impl Default for DebugTerrainSettings {
     fn default() -> Self {
         Self { show_tiles: true }
+    }
+}
+
+#[derive(Resource)]
+pub struct NavigationDebugSettings {
+    pub show_navigation: bool,
+}
+
+impl Default for NavigationDebugSettings {
+    fn default() -> Self {
+        Self {
+            show_navigation: false,
+        }
     }
 }
 
@@ -32,14 +142,24 @@ pub struct ChunkDebugStats {
     pub total_loaded: usize,
 }
 
+#[derive(Component, Clone, Copy, Debug, Hash, PartialEq, Eq)]
+pub struct NavigationDebugSprite {
+    pub chunk: IVec2,
+    pub local: UVec2,
+}
+
 pub struct WorldDebugPlugin;
 
 impl Plugin for WorldDebugPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<DebugTerrainSettings>()
+            .init_resource::<NavigationDebugSettings>()
             .init_resource::<ChunkDebugStats>()
             .add_systems(PreUpdate, reset_chunk_debug_stats)
-            .add_systems(Update, sync_chunk_debug_sprites);
+            .add_systems(
+                Update,
+                (sync_chunk_debug_sprites, sync_navigation_debug_sprites),
+            );
     }
 }
 

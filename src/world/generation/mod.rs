@@ -5,8 +5,9 @@ mod layout;
 mod noise;
 mod terrain;
 
+pub use biome::BiomeRegistry;
 pub use noise::NoiseSettings;
-pub use terrain::TerrainSettings;
+pub use terrain::{TerrainChunkUpdated, TerrainSettings};
 
 #[derive(Resource, Default)]
 pub struct WorldSeed(pub u64);

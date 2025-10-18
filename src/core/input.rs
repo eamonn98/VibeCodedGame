@@ -18,6 +18,7 @@ pub struct InputState {
     pub attack: bool,
     pub toggle_camera: bool,
     pub toggle_debug_tiles: bool,
+    pub toggle_navigation_overlay: bool,
 }
 
 fn map_inputs(mut input_state: ResMut<InputState>, keyboard: Res<ButtonInput<KeyCode>>) {
@@ -44,4 +45,5 @@ fn map_inputs(mut input_state: ResMut<InputState>, keyboard: Res<ButtonInput<Key
     input_state.attack = keyboard.just_pressed(KeyCode::KeyJ);
     input_state.toggle_camera = keyboard.just_pressed(KeyCode::KeyC);
     input_state.toggle_debug_tiles = keyboard.just_pressed(KeyCode::KeyV);
+    input_state.toggle_navigation_overlay = keyboard.just_pressed(KeyCode::KeyN);
 }

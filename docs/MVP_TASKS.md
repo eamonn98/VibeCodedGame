@@ -40,8 +40,8 @@ Integrate Bevy app startup, window configuration, and asset hot reloading to acc
 Implement sprite billboarding, tile mesh layering, depth sorting, and WGSL lighting shaders to produce the Octopath-inspired look.
 
 #### Subtasks
-- **Sprite3D integration** *(Not Started)*: Add or implement billboarding support (`bevy_sprite3d` or custom system) and verify depth sorting.
-- **Tile mesh staging** *(Not Started)*: Build a pipeline that converts tilemap data into lightweight 3D meshes with height variants.
+- ✅ **Sprite3D integration** *(Completed)*: Added custom HD-2D billboarding and depth sorting via `Hd2dPipelinePlugin`.
+- ✅ **Tile mesh staging** *(Completed)*: Terrain chunks now generate batched meshes driven by `TerrainChunkUpdated` events.
 - **Lighting shader pass** *(Not Started)*: Author WGSL shader stages for normal-mapped sprites and ambient/point lighting mix.
 
 ### Post-Processing & Camera
@@ -67,7 +67,7 @@ Design ECS-friendly representations for tiles, chunks, biomes, and collision lay
 
 #### Subtasks
 - ✅ **Component schema** *(Completed)*: Define structs/components for tile metadata, biome tags, and chunk coordinates.
-- **Resource registries** *(In Progress)*: Implement resources for world seeds, biome tables, and terrain materials.
+- ✅ **Resource registries** *(Completed)*: Added biome definitions, chunk dimension resources, and navigation overlays wired into generation.
 - ✅ **Terrain rendering link** *(Completed)*: Centered the camera/player over generated terrain and corrected world-space tile placement in `sync_terrain_tile_sprites()` so chunks now render as expected.
 - **Unit tests** *(Not Started)*: Add targeted tests ensuring coordinate math and data serialization behave deterministically.
 
@@ -91,9 +91,9 @@ Implement background generation, loading, and eviction of world chunks around th
 Derive physics-ready colliders and navigation hints from generated data so gameplay systems have reliable spatial information.
 
 #### Subtasks
-- **Collider extraction** *(Completed)*: Convert terrain blocks into collider primitives compatible with the physics engine.
+- ✅ **Collider extraction** *(Completed)*: Convert terrain blocks into collider primitives compatible with the physics engine.
 - **Nav data bake** *(Not Started)*: Generate lightweight navigation hints or flow fields for AI pathing.
-- **Verification harness** *(In Progress)*: Add tests or debug overlays that reveal collision and navigation layers in-game.
+- **Verification harness** *(In Progress)*: New navigation overlay toggle exposes collider coverage; expand with tests or analytics.
 
 ## Gameplay & Interaction
 

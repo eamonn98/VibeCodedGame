@@ -1,8 +1,8 @@
 use bevy::prelude::*;
 
-mod hd2d_pipeline;
-mod lighting;
-mod post_processing;
+pub mod hd2d_pipeline;
+pub mod lighting;
+pub mod post_processing;
 
 pub struct RenderingPlugin;
 
